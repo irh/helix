@@ -237,7 +237,7 @@ To set up Helix:</p>
 </ul>
 </li>
 </ul>
-<p><a href="https://repology.org/project/helix/versions"><img src="https://repology.org/badge/vertical-allrepos/helix.svg" alt="Packaging status" /></a></p>
+<p><a href="https://repology.org/project/helix-editor/versions"><img src="https://repology.org/badge/vertical-allrepos/helix-editor.svg" alt="Packaging status" /></a></p>
 <h2 id="linux"><a class="header" href="#linux">Linux</a></h2>
 <p>The following third party repositories are available:</p>
 <h3 id="ubuntu"><a class="header" href="#ubuntu">Ubuntu</a></h3>
@@ -1258,7 +1258,7 @@ Languages</a> guide for more language configuration information.</p>
 <tr><td>gjs</td><td>✓</td><td>✓</td><td>✓</td><td><code>typescript-language-server</code>, <code>vscode-eslint-language-server</code>, <code>ember-language-server</code></td></tr>
 <tr><td>gleam</td><td>✓</td><td>✓</td><td></td><td><code>gleam</code></td></tr>
 <tr><td>glimmer</td><td>✓</td><td></td><td></td><td><code>ember-language-server</code></td></tr>
-<tr><td>glsl</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
+<tr><td>glsl</td><td>✓</td><td>✓</td><td>✓</td><td><code>glsl_analyzer</code></td></tr>
 <tr><td>gn</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>go</td><td>✓</td><td>✓</td><td>✓</td><td><code>gopls</code>, <code>golangci-lint-langserver</code></td></tr>
 <tr><td>godot-resource</td><td>✓</td><td>✓</td><td></td><td></td></tr>
@@ -1376,6 +1376,7 @@ Languages</a> guide for more language configuration information.</p>
 <tr><td>smali</td><td>✓</td><td></td><td>✓</td><td></td></tr>
 <tr><td>smithy</td><td>✓</td><td></td><td></td><td><code>cs</code></td></tr>
 <tr><td>sml</td><td>✓</td><td></td><td></td><td></td></tr>
+<tr><td>snakemake</td><td>✓</td><td></td><td>✓</td><td><code>pylsp</code></td></tr>
 <tr><td>solidity</td><td>✓</td><td>✓</td><td></td><td><code>solc</code></td></tr>
 <tr><td>spicedb</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>sql</td><td>✓</td><td>✓</td><td></td><td></td></tr>
@@ -2172,7 +2173,6 @@ berry = "#2A2A4D"
 <tr><td><code>ui.debug.active</code></td><td>Indicator for the line at which debugging execution is paused at, found in the gutter</td></tr>
 <tr><td><code>ui.gutter</code></td><td>Gutter</td></tr>
 <tr><td><code>ui.gutter.selected</code></td><td>Gutter for the line the cursor is on</td></tr>
-<tr><td><code>ui.highlight.frameline</code></td><td>Line at which debugging execution is paused at</td></tr>
 <tr><td><code>ui.linenr</code></td><td>Line numbers</td></tr>
 <tr><td><code>ui.linenr.selected</code></td><td>Line number for the line the cursor is on</td></tr>
 <tr><td><code>ui.statusline</code></td><td>Statusline</td></tr>
@@ -2209,6 +2209,7 @@ berry = "#2A2A4D"
 <tr><td><code>ui.selection</code></td><td>For selections in the editing area</td></tr>
 <tr><td><code>ui.selection.primary</code></td><td></td></tr>
 <tr><td><code>ui.highlight</code></td><td>Highlighted lines in the picker preview</td></tr>
+<tr><td><code>ui.highlight.frameline</code></td><td>Line at which debugging execution is paused at</td></tr>
 <tr><td><code>ui.cursorline.primary</code></td><td>The line of the primary cursor (<a href="./configuration.html#editor-section">if cursorline is enabled</a>)</td></tr>
 <tr><td><code>ui.cursorline.secondary</code></td><td>The lines of any other cursors (<a href="./configuration.html#editor-section">if cursorline is enabled</a>)</td></tr>
 <tr><td><code>ui.cursorcolumn.primary</code></td><td>The column of the primary cursor (<a href="./configuration.html#editor-section">if cursorcolumn is enabled</a>)</td></tr>
