@@ -89,3 +89,4 @@
 | `:yank-diagnostic` | Yank diagnostic(s) under primary cursor to register, or clipboard by default |
 | `:read`, `:r` | Load a file into buffer |
 | `:trim-trailing-whitespace`, `:trim` | Delete whitespace |
+| `:echo` | Print the processed input to the editor status |
