@@ -139,13 +139,10 @@
 
 (self) @variable.builtin
 
-(variable
-  type: (identifier) @type)
+(type
+  _ @type)
 
 (arg
   (_ (identifier) @variable.parameter))
 
 (ellipsis) @variable.parameter
-
-(function
-  output_type: (identifier) @type)
