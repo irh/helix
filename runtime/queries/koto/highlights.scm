@@ -99,11 +99,14 @@
 (export
   (identifier) @namespace)
 
-(call
-  function: (identifier) @function.method)
+(chain
+  start: (identifier) @variable.parameter)
 
 (chain
   lookup: (identifier) @variable.other.member)
+
+(call_arg
+  (identifier) @variable.other.member)
 
 [
   (true)
@@ -139,13 +142,10 @@
 
 (self) @variable.builtin
 
-(variable
-  type: (identifier) @type)
+(type
+  _ @type)
 
 (arg
   (_ (identifier) @variable.parameter))
 
 (ellipsis) @variable.parameter
-
-(function
-  output_type: (identifier) @type)
