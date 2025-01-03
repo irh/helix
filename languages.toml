@@ -4027,7 +4027,7 @@ language-servers = ["koto-ls"]
 
 [[grammar]]
 name = "koto"
-source = { git = "https://github.com/koto-lang/tree-sitter-koto", rev = "b420f7922d0d74905fd0d771e5b83be9ee8a8a9a" }
+source = { git = "https://github.com/koto-lang/tree-sitter-koto", rev = "7258681498ac92f24b2d7ebb844b5e79dc3cf9ac" }
 
 [[language]]
 name = "gpr"
