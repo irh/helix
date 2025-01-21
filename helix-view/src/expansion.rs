@@ -33,6 +33,10 @@ pub enum Variable {
     BufferName,
     /// A string containing the line-ending of the currently focused document.
     LineEnding,
+    /// The language of the currently focused document.
+    Lang,
+    /// The currently focused document's selection.
+    Selection,
 }
 
 impl Variable {
@@ -41,6 +45,8 @@ impl Variable {
         Self::CursorColumn,
         Self::BufferName,
         Self::LineEnding,
+        Self::Lang,
+        Self::Selection,
     ];
 
     pub const fn as_str(&self) -> &'static str {
@@ -49,6 +55,8 @@ impl Variable {
             Self::CursorColumn => "cursor_column",
             Self::BufferName => "buffer_name",
             Self::LineEnding => "line_ending",
+            Self::Lang => "lang",
+            Self::Selection => "selection",
         }
     }
 
@@ -58,6 +66,8 @@ impl Variable {
             "cursor_column" => Some(Self::CursorColumn),
             "buffer_name" => Some(Self::BufferName),
             "line_ending" => Some(Self::LineEnding),
+            "lang" => Some(Self::Lang),
+            "selection" => Some(Self::Selection),
             _ => None,
         }
     }
@@ -215,5 +225,14 @@ fn expand_variable(editor: &Editor, variable: Variable) -> Result<Cow<'static, s
             }
         }
         Variable::LineEnding => Ok(Cow::Borrowed(doc.line_ending.as_str())),
+        Variable::Lang => Ok(Cow::Owned(
+            doc.language_name().unwrap_or("text").to_string(),
+        )),
+        Variable::Selection => Ok(Cow::Owned(
+            doc.selection(view.id)
+                .primary()
+                .fragment(doc.text().slice(..))
+                .to_string(),
+        )),
     }
 }
