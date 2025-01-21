@@ -164,13 +164,69 @@
 <ul>
 <li><a href="#typable-commands">Typable commands</a>
 <ul>
-<li><a href="#using-variables-in-typable-commands">Using variables</a></li>
+<li><a href="#command-mode-syntax">Command mode syntax</a>
+<ul>
+<li><a href="#quoting">Quoting</a></li>
+<li><a href="#expansions">Expansions</a></li>
+<li><a href="#flags">Flags</a></li>
+<li><a href="#exceptions">Exceptions</a></li>
+</ul>
+</li>
+<li><a href="#built-ins">Built-ins</a></li>
 </ul>
 </li>
 <li><a href="#static-commands">Static commands</a></li>
 </ul>
 <h2 id="typable-commands"><a class="header" href="#typable-commands">Typable commands</a></h2>
-<p>Typable commands are used from command mode and may take arguments. Command mode can be activated by pressing <code>:</code>. The built-in typable commands are:</p>
+<p>Typable commands are used from command mode and may take arguments. Command mode can be activated by pressing <code>:</code>.</p>
+<h3 id="command-mode-syntax"><a class="header" href="#command-mode-syntax">Command mode syntax</a></h3>
+<p>Command mode has rules for parsing the command line to evaluate quotes and expansions and split the line into positional arguments and flags. Most commands use these rules but some commands have custom parsing rules (see <a href="#exceptions">Exceptions</a> below).</p>
+<h4 id="quoting"><a class="header" href="#quoting">Quoting</a></h4>
+<p>By default command arguments are split on tabs and space characters. <code>:open README.md CHANGELOG.md</code> for example should open two files, <code>README.md</code> and <code>CHANGELOG.md</code>. Arguments that contain spaces can be surrounded in single quotes (<code>'</code>) or backticks (<code>`</code>) to prevent the space from separating the argument, like <code>:open 'a b.txt'</code>.</p>
+<p>Double quotes may be used the same way, but double quotes <em>expand</em> their inner content. <code>:echo "%{cursor_line}"</code> for example may print <code>1</code> since the variable expansion within is expanded. <code>:echo '%{cursor_line}'</code> prints <code>%{cursor_line}</code> literally though. Content within single quotes or backticks is interpreted as-is.</p>
+<p>On Unix systems the backslash character may be used to escape certain characters depending on where it is used. Within an argument which isn't surround in quotes, the backslash can be used to escape the space or tab characters: <code>:open a\ b.txt</code> is equivalent to <code>:open 'a b.txt'</code>. The backslash may also be used to escape quote characters (<code>'</code>, <code>`</code>, <code>"</code>) or the percent token (<code>%</code>) when used at the beginning of an argument. <code>:echo \%%sh{foo}</code> for example prints <code>%sh{foo}</code> instead of invoking a <code>foo</code> shell command and <code>:echo \"quote</code> prints <code>"quote</code>. The backslash character is treated literally in any other situation on Unix systems and always on Windows: <code>:echo \n</code> always prints <code>\n</code>.</p>
+<h4 id="expansions"><a class="header" href="#expansions">Expansions</a></h4>
+<p>Expansions are patterns that Helix recognizes and replaces within the command line. Helix recognizes anything starting with a percent token (<code>%</code>) as an expansion, for example <code>%sh{echo hi!}</code>.</p>
+<p>Expansions take the form <code>%[&lt;kind&gt;]&lt;open&gt;&lt;contents&gt;&lt;close&gt;</code>. In <code>%sh{echo hi!}</code>, for example, the kind is <code>sh</code> - the shell expansion - and the contents are "echo hi!", with <code>{</code> and <code>}</code> acting as opening and closing delimiters. The following open/close characters are recognized as expansion delimiter pairs: <code>(</code>/<code>)</code>, <code>[</code>/<code>]</code>, <code>{</code>/<code>}</code> and <code>&lt;</code>/<code>&gt;</code>. Any grapheme cluster can be used as both open and close delimiters instead however: <code>%{cursor_line}</code> is equivalent to <code>%|cursor_line|</code>, <code>%"cursor_line"</code> and even <code>%🏴‍☠️cursor_line🏴‍☠️</code>.</p>
+<p>When no <code>&lt;kind&gt;</code> is provided, Helix will expand a <strong>variable</strong>. For example <code>%{cursor_line}</code> can be used as an argument to provide the currently focused document's primary selection cursor line as an argument. <code>:echo %{cursor_line}</code> for instance may print <code>1</code> to the statusline.</p>
+<p>The following variables are supported:</p>
+<div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>cursor_line</code></td><td>The line number of the primary cursor in the currently focused document, starting at 1.</td></tr>
+<tr><td><code>cursor_column</code></td><td>The column number of the primary cursor in the currently focused document, starting at 1. This is counted as the number of grapheme clusters from the start of the line rather than bytes or codepoints.</td></tr>
+<tr><td><code>buffer_name</code></td><td>The relative path of the currently focused document. <code>[scratch]</code> is expanded instead for scratch buffers.</td></tr>
+<tr><td><code>line_ending</code></td><td>A string containing the line ending of the currently focused document. For example on Unix systems this is usually a line-feed character (<code>\n</code>) but on Windows systems this may be a carriage-return plus a line-feed (<code>\r\n</code>). The line ending kind of the currently focused document can be inspected with the <code>:line-ending</code> command.</td></tr>
+</tbody></table>
+</div>
+<p>Aside from editor variables, the following expansions may be used:</p>
+<ul>
+<li>Unicode <code>%u{..}</code>. The contents may contain up to six hexadecimal numbers corresponding to a Unicode codepoint value. For example <code>:echo %u{25CF}</code> prints <code>●</code> to the statusline.</li>
+<li>Shell <code>%sh{..}</code>. The contents are passed to the configured shell command. For example <code>:echo %sh{echo "20 * 5" | bc}</code> may print <code>100</code> on the statusline on when using a shell with <code>echo</code> and the <code>bc</code> calculator installed. Shell expansions are evaluated recursively. <code>%sh{echo '%{buffer_name}:%{cursor_line}'}</code> for example executes a command like <code>echo 'README.md:1'</code>: the variables within the <code>%sh{..}</code> expansion are evaluated before executing the shell command.</li>
+</ul>
+<p>As mentioned above, double quotes can be used to surround arguments with spaces but also support expansions within the quoted content unlike singe quotes or backticks. For example <code>:echo "circle: %u{25CF}"</code> prints <code>circle: ●</code> to the statusline while <code>:echo 'circle: %u{25CF}'</code> prints <code>circle: %u{25CF}</code>.</p>
+<p>Note that expansions are only evaluated once the Enter key is pressed in command mode.</p>
+<h4 id="flags"><a class="header" href="#flags">Flags</a></h4>
+<p>Command flags are optional switches that can be used to alter the behavior of a command. For example the <code>:sort</code> command accepts an optional <code>--reverse</code> (or <code>-r</code> for short) flag which, if present, causes the sort command to reverse the sorting direction. Typing the <code>-</code> character shows completions for the current command's flags, if any.</p>
+<p>The <code>--</code> flag specifies the end of flags. All arguments after <code>--</code> are treated as positional arguments: <code>:open -- -a.txt</code> opens a file called <code>-a.txt</code>.</p>
+<h4 id="exceptions"><a class="header" href="#exceptions">Exceptions</a></h4>
+<p>The following commands support expansions but otherwise pass the given argument directly to the shell program without interpreting quotes:</p>
+<ul>
+<li><code>:insert-output</code></li>
+<li><code>:append-output</code></li>
+<li><code>:pipe</code></li>
+<li><code>:pipe-to</code></li>
+<li><code>:run-shell-command</code></li>
+</ul>
+<p>For example executing <code>:sh echo "%{buffer_name}:%{cursor_column}"</code> would pass text like <code>echo "README.md:1"</code> as an argument to the shell program: the expansions are evaluated but not the quotes.</p>
+<p>The <code>:set-option</code> and <code>:toggle-option</code> commands use regular parsing for the first argument - the config option name - and parse the rest depending on the config option's type. <code>:set-option</code> interprets the second argument as a string for string config options and parses everything else as JSON.</p>
+<p><code>:toggle-option</code>'s behavior depends on the JSON type of the config option supplied as the first argument:</p>
+<ul>
+<li>Booleans: only the config option name should be provided. For example <code>:toggle-option auto-format</code> will flip the <code>auto-format</code> option.</li>
+<li>Strings: the rest of the command line is parsed with regular quoting rules. For example <code>:toggle-option indent-heuristic hybrid tree-sitter simple</code> cycles through "hybrid", "tree-sitter" and "simple" values on each invocation of the command.</li>
+<li>Numbers, arrays and objects: the rest of the command line is parsed as a stream of JSON values. For example <code>:toggle-option rulers [81] [51, 73]</code> cycles through <code>[81]</code> and <code>[51, 73]</code>.</li>
+</ul>
+<p>When providing multiple values to <code>:toggle-option</code> there should be no duplicates. <code>:toggle-option indent-heuristic hybrid simple tree-sitter simple</code> for example would only toggle between "hybrid" and "tree-sitter" values.</p>
+<h3 id="built-ins"><a class="header" href="#built-ins">Built-ins</a></h3>
+<p>The built-in typable commands are:</p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>:quit</code>, <code>:q</code></td><td>Close the current view.</td></tr>
 <tr><td><code>:quit!</code>, <code>:q!</code></td><td>Force close the current view, ignoring unsaved changes.</td></tr>
@@ -239,11 +295,11 @@
 <tr><td><code>:goto</code>, <code>:g</code></td><td>Goto line number.</td></tr>
 <tr><td><code>:set-language</code>, <code>:lang</code></td><td>Set the language of current buffer (show current language if no value specified).</td></tr>
 <tr><td><code>:set-option</code>, <code>:set</code></td><td>Set a config option at runtime.<br>For example to disable smart case search, use <code>:set search.smart-case false</code>.</td></tr>
-<tr><td><code>:toggle-option</code>, <code>:toggle</code></td><td>Toggle a boolean config option at runtime.<br>For example to toggle smart case search, use <code>:toggle search.smart-case</code>.</td></tr>
+<tr><td><code>:toggle-option</code>, <code>:toggle</code></td><td>Toggle a config option at runtime.<br>For example to toggle smart case search, use <code>:toggle search.smart-case</code>.</td></tr>
 <tr><td><code>:get-option</code>, <code>:get</code></td><td>Get the current value of a config option.</td></tr>
 <tr><td><code>:sort</code></td><td>Sort ranges in selection.</td></tr>
-<tr><td><code>:rsort</code></td><td>Sort ranges in selection in reverse order.</td></tr>
 <tr><td><code>:reflow</code></td><td>Hard-wrap the current selection of lines to a given width.</td></tr>
+<tr><td><code>:trim-trailing-whitespace</code>, <code>:trim</code></td><td>Delete whitespace</td></tr>
 <tr><td><code>:tree-sitter-subtree</code>, <code>:ts-subtree</code></td><td>Display the smallest tree-sitter subtree that spans the primary selection, primarily for debugging queries.</td></tr>
 <tr><td><code>:config-reload</code></td><td>Refresh user config.</td></tr>
 <tr><td><code>:config-open</code></td><td>Open the user config.toml file.</td></tr>
@@ -260,33 +316,10 @@
 <tr><td><code>:move</code>, <code>:mv</code></td><td>Move the current buffer and its corresponding file to a different path</td></tr>
 <tr><td><code>:yank-diagnostic</code></td><td>Yank diagnostic(s) under primary cursor to register, or clipboard by default</td></tr>
 <tr><td><code>:read</code>, <code>:r</code></td><td>Load a file into buffer</td></tr>
-<tr><td><code>:trim-trailing-whitespace</code>, <code>:trim</code></td><td>Delete whitespace</td></tr>
-<tr><td><code>:echo</code></td><td>Print the processed input to the editor status</td></tr>
+<tr><td><code>:echo</code></td><td>Prints the given arguments to the statusline.</td></tr>
+<tr><td><code>:noop</code></td><td>Does nothing.</td></tr>
 </tbody></table>
 </div>
-<h3 id="using-variables-in-typable-commands"><a class="header" href="#using-variables-in-typable-commands">Using variables in typable commands</a></h3>
-<p>Helix provides several variables that can be used when typing commands or creating custom shortcuts. These variables are listed below:</p>
-<div class="table-wrapper"><table><thead><tr><th>Variable</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>%{basename}</code> or <code>%{b}</code></td><td>The name and extension of the currently focused file.</td></tr>
-<tr><td><code>%{dirname}</code>  or <code>%{d}</code></td><td>The absolute path of the parent directory of the currently focused file.</td></tr>
-<tr><td><code>%{cwd}</code></td><td>The absolute path of the current working directory of Helix.</td></tr>
-<tr><td><code>%{repo}</code></td><td>The absolute path of the VCS repository helix is opened in. Fallback to <code>cwd</code> if not inside a VCS repository</td></tr>
-<tr><td><code>%{filename}</code> or <code>%{f}</code></td><td>The absolute path of the currently focused file.</td></tr>
-<tr><td><code>%{filename:rel}</code></td><td>The relative path of the file according to <code>cwd</code> (will give absolute path if the file is not a child of the current working directory)</td></tr>
-<tr><td><code>%{filename:repo_rel}</code></td><td>The relative path of the file according to <code>repo</code> (will give absolute path if the file is not a child of the VCS directory or the cwd)</td></tr>
-<tr><td><code>%{ext}</code></td><td>The extension of the current file</td></tr>
-<tr><td><code>%{lang}</code></td><td>The language of the current file</td></tr>
-<tr><td><code>%{linenumber}</code></td><td>The line number where the primary cursor is positioned.</td></tr>
-<tr><td><code>%{cursorcolumn}</code></td><td>The position of the primary cursor inside the current line.</td></tr>
-<tr><td><code>%{selection}</code></td><td>The text selected by the primary cursor.</td></tr>
-<tr><td><code>%sh{cmd}</code></td><td>Executes <code>cmd</code> with the default shell and returns the command output, if any.</td></tr>
-</tbody></table>
-</div>
-<h4 id="example"><a class="header" href="#example">Example</a></h4>
-<pre><code class="language-toml">[keys.normal]
-# Print blame info for the line where the main cursor is.
-C-b = ":echo %sh{git blame -L %{linenumber} %{filename}}"
-</code></pre>
 <h2 id="static-commands"><a class="header" href="#static-commands">Static Commands</a></h2>
 <p>Static commands take no arguments and can be bound to keys. Static commands can also be executed from the command picker (<code>&lt;space&gt;?</code>). The built-in static commands are:</p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th><th>Default keybinds</th></tr></thead><tbody>
