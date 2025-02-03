@@ -187,7 +187,7 @@
 <p>On Unix systems the backslash character may be used to escape certain characters depending on where it is used. Within an argument which isn't surround in quotes, the backslash can be used to escape the space or tab characters: <code>:open a\ b.txt</code> is equivalent to <code>:open 'a b.txt'</code>. The backslash may also be used to escape quote characters (<code>'</code>, <code>`</code>, <code>"</code>) or the percent token (<code>%</code>) when used at the beginning of an argument. <code>:echo \%%sh{foo}</code> for example prints <code>%sh{foo}</code> instead of invoking a <code>foo</code> shell command and <code>:echo \"quote</code> prints <code>"quote</code>. The backslash character is treated literally in any other situation on Unix systems and always on Windows: <code>:echo \n</code> always prints <code>\n</code>.</p>
 <h4 id="expansions"><a class="header" href="#expansions">Expansions</a></h4>
 <p>Expansions are patterns that Helix recognizes and replaces within the command line. Helix recognizes anything starting with a percent token (<code>%</code>) as an expansion, for example <code>%sh{echo hi!}</code>.</p>
-<p>Expansions take the form <code>%[&lt;kind&gt;]&lt;open&gt;&lt;contents&gt;&lt;close&gt;</code>. In <code>%sh{echo hi!}</code>, for example, the kind is <code>sh</code> - the shell expansion - and the contents are "echo hi!", with <code>{</code> and <code>}</code> acting as opening and closing delimiters. The following open/close characters are recognized as expansion delimiter pairs: <code>(</code>/<code>)</code>, <code>[</code>/<code>]</code>, <code>{</code>/<code>}</code> and <code>&lt;</code>/<code>&gt;</code>. Any grapheme cluster can be used as both open and close delimiters instead however: <code>%{cursor_line}</code> is equivalent to <code>%|cursor_line|</code>, <code>%"cursor_line"</code> and even <code>%🏴‍☠️cursor_line🏴‍☠️</code>.</p>
+<p>Expansions take the form <code>%[&lt;kind&gt;]&lt;open&gt;&lt;contents&gt;&lt;close&gt;</code>. In <code>%sh{echo hi!}</code>, for example, the kind is <code>sh</code> - the shell expansion - and the contents are "echo hi!", with <code>{</code> and <code>}</code> acting as opening and closing delimiters. The following open/close characters are recognized as expansion delimiter pairs: <code>(</code>/<code>)</code>, <code>[</code>/<code>]</code>, <code>{</code>/<code>}</code> and <code>&lt;</code>/<code>&gt;</code>. Plus the single characters <code>'</code>, <code>"</code> or <code>|</code> may be used instead: <code>%{cursor_line}</code> is equivalent to <code>%&lt;cursor_line&gt;</code>, <code>%[cursor_line]</code> or <code>%|cursor_line|</code> for example.</p>
 <p>When no <code>&lt;kind&gt;</code> is provided, Helix will expand a <strong>variable</strong>. For example <code>%{cursor_line}</code> can be used as an argument to provide the currently focused document's primary selection cursor line as an argument. <code>:echo %{cursor_line}</code> for instance may print <code>1</code> to the statusline.</p>
 <p>The following variables are supported:</p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
@@ -216,7 +216,7 @@
 <li><code>:pipe-to</code></li>
 <li><code>:run-shell-command</code></li>
 </ul>
-<p>For example executing <code>:sh echo "%{buffer_name}:%{cursor_column}"</code> would pass text like <code>echo "README.md:1"</code> as an argument to the shell program: the expansions are evaluated but not the quotes.</p>
+<p>For example executing <code>:sh echo "%{buffer_name}:%{cursor_column}"</code> would pass text like <code>echo "README.md:1"</code> as an argument to the shell program: the expansions are evaluated but not the quotes. To escape a percent character in a shell command you can use two percent characters. For example in a shell you might execute <code>date -u '%Y-%m-%d'</code> while on the command line the percent characters must be doubled: <code>:insert-output date -u '%%Y-%%m-%%d'</code>.</p>
 <p>The <code>:set-option</code> and <code>:toggle-option</code> commands use regular parsing for the first argument - the config option name - and parse the rest depending on the config option's type. <code>:set-option</code> interprets the second argument as a string for string config options and parses everything else as JSON.</p>
 <p><code>:toggle-option</code>'s behavior depends on the JSON type of the config option supplied as the first argument:</p>
 <ul>
@@ -225,6 +225,7 @@
 <li>Numbers, arrays and objects: the rest of the command line is parsed as a stream of JSON values. For example <code>:toggle-option rulers [81] [51, 73]</code> cycles through <code>[81]</code> and <code>[51, 73]</code>.</li>
 </ul>
 <p>When providing multiple values to <code>:toggle-option</code> there should be no duplicates. <code>:toggle-option indent-heuristic hybrid simple tree-sitter simple</code> for example would only toggle between "hybrid" and "tree-sitter" values.</p>
+<p><code>:lsp-workspace-command</code> works similarly to <code>:toggle-option</code>. The first argument (if present) is parsed according to normal rules. The rest of the line is parsed as JSON values. Unlike <code>:toggle-option</code>, string arguments for a command must be quoted. For example <code>:lsp-workspace-command lsp.Command "foo" "bar"</code>.</p>
 <h3 id="built-ins"><a class="header" href="#built-ins">Built-ins</a></h3>
 <p>The built-in typable commands are:</p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
@@ -280,8 +281,8 @@
 <tr><td><code>:reload-all</code>, <code>:rla</code></td><td>Discard changes and reload all documents from the source files.</td></tr>
 <tr><td><code>:update</code>, <code>:u</code></td><td>Write changes only if the file has been modified.</td></tr>
 <tr><td><code>:lsp-workspace-command</code></td><td>Open workspace command picker</td></tr>
-<tr><td><code>:lsp-restart</code></td><td>Restarts the language servers used by the current doc</td></tr>
-<tr><td><code>:lsp-stop</code></td><td>Stops the language servers that are used by the current doc</td></tr>
+<tr><td><code>:lsp-restart</code></td><td>Restarts the given language servers, or all language servers that are used by the current file if no arguments are supplied</td></tr>
+<tr><td><code>:lsp-stop</code></td><td>Stops the given language servers, or all language servers that are used by the current file if no arguments are supplied</td></tr>
 <tr><td><code>:tree-sitter-scopes</code></td><td>Display tree sitter scopes, primarily for theming and development.</td></tr>
 <tr><td><code>:tree-sitter-highlight-name</code></td><td>Display name of tree-sitter highlight scope under the cursor.</td></tr>
 <tr><td><code>:debug-start</code>, <code>:dbg</code></td><td>Start a debug session from a given template with given parameters.</td></tr>
@@ -299,7 +300,6 @@
 <tr><td><code>:get-option</code>, <code>:get</code></td><td>Get the current value of a config option.</td></tr>
 <tr><td><code>:sort</code></td><td>Sort ranges in selection.</td></tr>
 <tr><td><code>:reflow</code></td><td>Hard-wrap the current selection of lines to a given width.</td></tr>
-<tr><td><code>:trim-trailing-whitespace</code>, <code>:trim</code></td><td>Delete whitespace</td></tr>
 <tr><td><code>:tree-sitter-subtree</code>, <code>:ts-subtree</code></td><td>Display the smallest tree-sitter subtree that spans the primary selection, primarily for debugging queries.</td></tr>
 <tr><td><code>:config-reload</code></td><td>Refresh user config.</td></tr>
 <tr><td><code>:config-open</code></td><td>Open the user config.toml file.</td></tr>
@@ -316,6 +316,7 @@
 <tr><td><code>:move</code>, <code>:mv</code></td><td>Move the current buffer and its corresponding file to a different path</td></tr>
 <tr><td><code>:yank-diagnostic</code></td><td>Yank diagnostic(s) under primary cursor to register, or clipboard by default</td></tr>
 <tr><td><code>:read</code>, <code>:r</code></td><td>Load a file into buffer</td></tr>
+<tr><td><code>:trim-trailing-whitespace</code>, <code>:trim</code></td><td>Delete whitespace</td></tr>
 <tr><td><code>:echo</code></td><td>Prints the given arguments to the statusline.</td></tr>
 <tr><td><code>:noop</code></td><td>Does nothing.</td></tr>
 </tbody></table>
@@ -562,6 +563,7 @@
 <tr><td><code>wonly</code></td><td>Close windows except current</td><td>normal: <code>&lt;C-w&gt;o</code>, <code>&lt;space&gt;wo</code>, <code>&lt;C-w&gt;&lt;C-o&gt;</code>, <code>&lt;space&gt;w&lt;C-o&gt;</code>, select: <code>&lt;C-w&gt;o</code>, <code>&lt;space&gt;wo</code>, <code>&lt;C-w&gt;&lt;C-o&gt;</code>, <code>&lt;space&gt;w&lt;C-o&gt;</code></td></tr>
 <tr><td><code>select_register</code></td><td>Select register</td><td>normal: <code>"</code>, select: <code>"</code></td></tr>
 <tr><td><code>insert_register</code></td><td>Insert register</td><td>insert: <code>&lt;C-r&gt;</code></td></tr>
+<tr><td><code>copy_between_registers</code></td><td>Copy between two registers</td><td></td></tr>
 <tr><td><code>align_view_middle</code></td><td>Align view middle</td><td>normal: <code>Zm</code>, <code>zm</code>, select: <code>Zm</code>, <code>zm</code></td></tr>
 <tr><td><code>align_view_top</code></td><td>Align view top</td><td>normal: <code>Zt</code>, <code>zt</code>, select: <code>Zt</code>, <code>zt</code></td></tr>
 <tr><td><code>align_view_center</code></td><td>Align view center</td><td>normal: <code>Zc</code>, <code>Zz</code>, <code>zc</code>, <code>zz</code>, select: <code>Zc</code>, <code>Zz</code>, <code>zc</code>, <code>zz</code></td></tr>
