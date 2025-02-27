@@ -1111,35 +1111,31 @@ See the documentation page on <a href="./pickers.html">pickers</a> for more info
 <tr><td><code>BackTab</code></td><td>Select previous completion item</td></tr>
 <tr><td><code>Enter</code></td><td>Open selected</td></tr>
 </tbody></table>
-</div><div style="break-before: page; page-break-before: always;"></div><h1 id="commands"><a class="header" href="#commands">Commands</a></h1>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="command-line"><a class="header" href="#command-line">Command line</a></h1>
 <ul>
-<li><a href="commands.html#typable-commands">Typable commands</a>
-<ul>
-<li><a href="commands.html#command-mode-syntax">Command mode syntax</a>
-<ul>
-<li><a href="commands.html#quoting">Quoting</a></li>
-<li><a href="commands.html#expansions">Expansions</a></li>
-<li><a href="commands.html#flags">Flags</a></li>
-<li><a href="commands.html#exceptions">Exceptions</a></li>
+<li><a href="command-line.html#quoting">Quoting</a></li>
+<li><a href="command-line.html#flags">Flags</a></li>
+<li><a href="command-line.html#expansions">Expansions</a></li>
+<li><a href="command-line.html#exceptions">Exceptions</a></li>
 </ul>
-</li>
-<li><a href="commands.html#built-ins">Built-ins</a></li>
-</ul>
-</li>
-<li><a href="commands.html#static-commands">Static commands</a></li>
-</ul>
-<h2 id="typable-commands"><a class="header" href="#typable-commands">Typable commands</a></h2>
-<p>Typable commands are used from command mode and may take arguments. Command mode can be activated by pressing <code>:</code>.</p>
-<h3 id="command-mode-syntax"><a class="header" href="#command-mode-syntax">Command mode syntax</a></h3>
-<p>Command mode has rules for parsing the command line to evaluate quotes and expansions and split the line into positional arguments and flags. Most commands use these rules but some commands have custom parsing rules (see <a href="commands.html#exceptions">Exceptions</a> below).</p>
-<h4 id="quoting"><a class="header" href="#quoting">Quoting</a></h4>
-<p>By default command arguments are split on tabs and space characters. <code>:open README.md CHANGELOG.md</code> for example should open two files, <code>README.md</code> and <code>CHANGELOG.md</code>. Arguments that contain spaces can be surrounded in single quotes (<code>'</code>) or backticks (<code>`</code>) to prevent the space from separating the argument, like <code>:open 'a b.txt'</code>.</p>
-<p>Double quotes may be used the same way, but double quotes <em>expand</em> their inner content. <code>:echo "%{cursor_line}"</code> for example may print <code>1</code> since the variable expansion within is expanded. <code>:echo '%{cursor_line}'</code> prints <code>%{cursor_line}</code> literally though. Content within single quotes or backticks is interpreted as-is.</p>
+<p>The command line is used for executing <a href="./commands.html#typable-commands">typable commands</a> like <code>:write</code> or <code>:quit</code>. Press <code>:</code> to activate the command line.</p>
+<p>Typable commands optionally accept arguments. <code>:write</code> for example accepts an optional path to write the file contents. The command line also supports a quoting syntax for arguments, flags to modify command behaviors, and <em>expansions</em> - a way to insert values from the editor. Most commands support these features but some have custom parsing rules (see the <a href="command-line.html#exceptions">exceptions</a> below).</p>
+<h2 id="quoting"><a class="header" href="#quoting">Quoting</a></h2>
+<p>By default, command arguments are split on tabs and space characters. <code>:open README.md CHANGELOG.md</code> for example should open two files, <code>README.md</code> and <code>CHANGELOG.md</code>. Arguments that contain spaces can be surrounded in single quotes (<code>'</code>) or backticks (<code>`</code>) to prevent the space from separating the argument, like <code>:open 'a b.txt'</code>.</p>
+<p>Double quotes may be used the same way, but double quotes <em>expand</em> their inner content. <code>:echo "%{cursor_line}"</code> for example may print <code>1</code> because of the expansion for the <code>cursor_line</code> variable. <code>:echo '%{cursor_line}'</code> though prints <code>%{cursor_line}</code> literally: content within single quotes or backticks is interpreted as-is.</p>
 <p>On Unix systems the backslash character may be used to escape certain characters depending on where it is used. Within an argument which isn't surround in quotes, the backslash can be used to escape the space or tab characters: <code>:open a\ b.txt</code> is equivalent to <code>:open 'a b.txt'</code>. The backslash may also be used to escape quote characters (<code>'</code>, <code>`</code>, <code>"</code>) or the percent token (<code>%</code>) when used at the beginning of an argument. <code>:echo \%%sh{foo}</code> for example prints <code>%sh{foo}</code> instead of invoking a <code>foo</code> shell command and <code>:echo \"quote</code> prints <code>"quote</code>. The backslash character is treated literally in any other situation on Unix systems and always on Windows: <code>:echo \n</code> always prints <code>\n</code>.</p>
-<h4 id="expansions"><a class="header" href="#expansions">Expansions</a></h4>
-<p>Expansions are patterns that Helix recognizes and replaces within the command line. Helix recognizes anything starting with a percent token (<code>%</code>) as an expansion, for example <code>%sh{echo hi!}</code>.</p>
-<p>Expansions take the form <code>%[&lt;kind&gt;]&lt;open&gt;&lt;contents&gt;&lt;close&gt;</code>. In <code>%sh{echo hi!}</code>, for example, the kind is <code>sh</code> - the shell expansion - and the contents are "echo hi!", with <code>{</code> and <code>}</code> acting as opening and closing delimiters. The following open/close characters are recognized as expansion delimiter pairs: <code>(</code>/<code>)</code>, <code>[</code>/<code>]</code>, <code>{</code>/<code>}</code> and <code>&lt;</code>/<code>&gt;</code>. Plus the single characters <code>'</code>, <code>"</code> or <code>|</code> may be used instead: <code>%{cursor_line}</code> is equivalent to <code>%&lt;cursor_line&gt;</code>, <code>%[cursor_line]</code> or <code>%|cursor_line|</code> for example.</p>
-<p>When no <code>&lt;kind&gt;</code> is provided, Helix will expand a <strong>variable</strong>. For example <code>%{cursor_line}</code> can be used as an argument to provide the currently focused document's primary selection cursor line as an argument. <code>:echo %{cursor_line}</code> for instance may print <code>1</code> to the statusline.</p>
+<h2 id="flags"><a class="header" href="#flags">Flags</a></h2>
+<p>Command flags are optional switches that can be used to alter the behavior of a command. For example the <code>:sort</code> command accepts an optional <code>--reverse</code> (or <code>-r</code> for short) flag which causes the sort command to reverse the sorting direction. Typing the <code>-</code> character shows completions for the current command's flags, if any.</p>
+<p>The <code>--</code> flag specifies the end of flags. All arguments after <code>--</code> are treated as positional arguments: <code>:open -- -a.txt</code> opens a file called <code>-a.txt</code>.</p>
+<h2 id="expansions"><a class="header" href="#expansions">Expansions</a></h2>
+<p>Expansions are patterns that Helix recognizes and replaces within the command line. Helix recognizes anything starting with a percent token (<code>%</code>) as an expansion, for example <code>%sh{echo hi!}</code>. Expansions are particularly useful when used in commands like <code>:echo</code> or <code>:noop</code> for executing simple scripts. For example:</p>
+<pre><code class="language-toml">[keys.normal]
+# Print the current line's git blame information to the statusline.
+space.B = ":echo %sh{git blame -L %{cursor_line},+1 %{buffer_name}}"
+</code></pre>
+<p>Expansions take the form <code>%[&lt;kind&gt;]&lt;open&gt;&lt;contents&gt;&lt;close&gt;</code>. In <code>%sh{echo hi!}</code>, for example, the kind is <code>sh</code> - the shell expansion - and the contents are "echo hi!", with <code>{</code> and <code>}</code> acting as opening and closing delimiters. The following open/close characters are recognized as expansion delimiter pairs: <code>(</code>/<code>)</code>, <code>[</code>/<code>]</code>, <code>{</code>/<code>}</code> and <code>&lt;</code>/<code>&gt;</code>. Plus the single characters <code>'</code>, <code>"</code> or <code>|</code> may be used instead: <code>%{cursor_line}</code> is equivalent to <code>%&lt;cursor_line&gt;</code>, <code>%[cursor_line]</code> or <code>%|cursor_line|</code>.</p>
+<p>To escape a percent character instead of treating it as an expansion, use two percent characters consecutively. To execute a shell command like <code>date -u +'%Y-%m-%d'</code>, double the percent characters: <code>:echo %sh{date -u +'%%Y-%%m-%%d'}</code>.</p>
+<p>When no <code>&lt;kind&gt;</code> is provided, Helix will expand a <strong>variable</strong>. For example <code>%{cursor_line}</code> can be used as in argument to insert the line number. <code>:echo %{cursor_line}</code> for instance may print <code>1</code> to the statusline.</p>
 <p>The following variables are supported:</p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>cursor_line</code></td><td>The line number of the primary cursor in the currently focused document, starting at 1.</td></tr>
@@ -1153,12 +1149,9 @@ See the documentation page on <a href="./pickers.html">pickers</a> for more info
 <li>Unicode <code>%u{..}</code>. The contents may contain up to six hexadecimal numbers corresponding to a Unicode codepoint value. For example <code>:echo %u{25CF}</code> prints <code>●</code> to the statusline.</li>
 <li>Shell <code>%sh{..}</code>. The contents are passed to the configured shell command. For example <code>:echo %sh{echo "20 * 5" | bc}</code> may print <code>100</code> on the statusline on when using a shell with <code>echo</code> and the <code>bc</code> calculator installed. Shell expansions are evaluated recursively. <code>%sh{echo '%{buffer_name}:%{cursor_line}'}</code> for example executes a command like <code>echo 'README.md:1'</code>: the variables within the <code>%sh{..}</code> expansion are evaluated before executing the shell command.</li>
 </ul>
-<p>As mentioned above, double quotes can be used to surround arguments with spaces but also support expansions within the quoted content unlike singe quotes or backticks. For example <code>:echo "circle: %u{25CF}"</code> prints <code>circle: ●</code> to the statusline while <code>:echo 'circle: %u{25CF}'</code> prints <code>circle: %u{25CF}</code>.</p>
+<p>As mentioned above, double quotes can be used to surround arguments containing spaces but also support expansions within the quoted content unlike singe quotes or backticks. For example <code>:echo "circle: %u{25CF}"</code> prints <code>circle: ●</code> to the statusline while <code>:echo 'circle: %u{25CF}'</code> prints <code>circle: %u{25CF}</code>.</p>
 <p>Note that expansions are only evaluated once the Enter key is pressed in command mode.</p>
-<h4 id="flags"><a class="header" href="#flags">Flags</a></h4>
-<p>Command flags are optional switches that can be used to alter the behavior of a command. For example the <code>:sort</code> command accepts an optional <code>--reverse</code> (or <code>-r</code> for short) flag which, if present, causes the sort command to reverse the sorting direction. Typing the <code>-</code> character shows completions for the current command's flags, if any.</p>
-<p>The <code>--</code> flag specifies the end of flags. All arguments after <code>--</code> are treated as positional arguments: <code>:open -- -a.txt</code> opens a file called <code>-a.txt</code>.</p>
-<h4 id="exceptions"><a class="header" href="#exceptions">Exceptions</a></h4>
+<h2 id="exceptions"><a class="header" href="#exceptions">Exceptions</a></h2>
 <p>The following commands support expansions but otherwise pass the given argument directly to the shell program without interpreting quotes:</p>
 <ul>
 <li><code>:insert-output</code></li>
@@ -1167,7 +1160,7 @@ See the documentation page on <a href="./pickers.html">pickers</a> for more info
 <li><code>:pipe-to</code></li>
 <li><code>:run-shell-command</code></li>
 </ul>
-<p>For example executing <code>:sh echo "%{buffer_name}:%{cursor_column}"</code> would pass text like <code>echo "README.md:1"</code> as an argument to the shell program: the expansions are evaluated but not the quotes. To escape a percent character in a shell command you can use two percent characters. For example in a shell you might execute <code>date -u '%Y-%m-%d'</code> while on the command line the percent characters must be doubled: <code>:insert-output date -u '%%Y-%%m-%%d'</code>.</p>
+<p>For example executing <code>:sh echo "%{buffer_name}:%{cursor_column}"</code> would pass text like <code>echo "README.md:1"</code> as an argument to the shell program: the expansions are evaluated but not the quotes. As mentioned above, percent characters can be used in shell commands by doubling the percent character. To insert the output of a command like <code>date -u +'%Y-%m-%d'</code> use <code>:insert-output date -u +'%%Y-%%m-%%d'</code>.</p>
 <p>The <code>:set-option</code> and <code>:toggle-option</code> commands use regular parsing for the first argument - the config option name - and parse the rest depending on the config option's type. <code>:set-option</code> interprets the second argument as a string for string config options and parses everything else as JSON.</p>
 <p><code>:toggle-option</code>'s behavior depends on the JSON type of the config option supplied as the first argument:</p>
 <ul>
@@ -1177,8 +1170,13 @@ See the documentation page on <a href="./pickers.html">pickers</a> for more info
 </ul>
 <p>When providing multiple values to <code>:toggle-option</code> there should be no duplicates. <code>:toggle-option indent-heuristic hybrid simple tree-sitter simple</code> for example would only toggle between "hybrid" and "tree-sitter" values.</p>
 <p><code>:lsp-workspace-command</code> works similarly to <code>:toggle-option</code>. The first argument (if present) is parsed according to normal rules. The rest of the line is parsed as JSON values. Unlike <code>:toggle-option</code>, string arguments for a command must be quoted. For example <code>:lsp-workspace-command lsp.Command "foo" "bar"</code>.</p>
-<h3 id="built-ins"><a class="header" href="#built-ins">Built-ins</a></h3>
-<p>The built-in typable commands are:</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="commands"><a class="header" href="#commands">Commands</a></h1>
+<ul>
+<li><a href="commands.html#typable-commands">Typable commands</a></li>
+<li><a href="commands.html#static-commands">Static commands</a></li>
+</ul>
+<h2 id="typable-commands"><a class="header" href="#typable-commands">Typable commands</a></h2>
+<p>Typable commands are used from command mode and may take arguments. Command mode can be activated by pressing <code>:</code>. The built-in typable commands are:</p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>:quit</code>, <code>:q</code></td><td>Close the current view.</td></tr>
 <tr><td><code>:quit!</code>, <code>:q!</code></td><td>Force close the current view, ignoring unsaved changes.</td></tr>
@@ -1267,7 +1265,6 @@ See the documentation page on <a href="./pickers.html">pickers</a> for more info
 <tr><td><code>:move</code>, <code>:mv</code></td><td>Move the current buffer and its corresponding file to a different path</td></tr>
 <tr><td><code>:yank-diagnostic</code></td><td>Yank diagnostic(s) under primary cursor to register, or clipboard by default</td></tr>
 <tr><td><code>:read</code>, <code>:r</code></td><td>Load a file into buffer</td></tr>
-<tr><td><code>:trim-trailing-whitespace</code>, <code>:trim</code></td><td>Delete whitespace</td></tr>
 <tr><td><code>:echo</code></td><td>Prints the given arguments to the statusline.</td></tr>
 <tr><td><code>:noop</code></td><td>Does nothing.</td></tr>
 </tbody></table>
@@ -1586,7 +1583,7 @@ Languages</a> guide for more language configuration information.</p>
 <tr><td>adl</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
 <tr><td>agda</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>amber</td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td>astro</td><td>✓</td><td></td><td></td><td></td></tr>
+<tr><td>astro</td><td>✓</td><td></td><td></td><td><code>astro-ls</code></td></tr>
 <tr><td>awk</td><td>✓</td><td>✓</td><td></td><td><code>awk-language-server</code></td></tr>
 <tr><td>bash</td><td>✓</td><td>✓</td><td>✓</td><td><code>bash-language-server</code></td></tr>
 <tr><td>bass</td><td>✓</td><td></td><td></td><td><code>bass</code></td></tr>
@@ -1703,7 +1700,7 @@ Languages</a> guide for more language configuration information.</p>
 <tr><td>just</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
 <tr><td>kdl</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
 <tr><td>koka</td><td>✓</td><td></td><td>✓</td><td><code>koka</code></td></tr>
-<tr><td>kotlin</td><td>✓</td><td></td><td></td><td><code>kotlin-language-server</code></td></tr>
+<tr><td>kotlin</td><td>✓</td><td>✓</td><td>✓</td><td><code>kotlin-language-server</code></td></tr>
 <tr><td>koto</td><td>✓</td><td>✓</td><td>✓</td><td><code>koto-ls</code></td></tr>
 <tr><td>latex</td><td>✓</td><td>✓</td><td></td><td><code>texlab</code></td></tr>
 <tr><td>ld</td><td>✓</td><td></td><td>✓</td><td></td></tr>
@@ -1716,6 +1713,7 @@ Languages</a> guide for more language configuration information.</p>
 <tr><td>log</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>lpf</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>lua</td><td>✓</td><td>✓</td><td>✓</td><td><code>lua-language-server</code></td></tr>
+<tr><td>mail</td><td>✓</td><td>✓</td><td></td><td></td></tr>
 <tr><td>make</td><td>✓</td><td></td><td>✓</td><td></td></tr>
 <tr><td>markdoc</td><td>✓</td><td></td><td></td><td><code>markdoc-ls</code></td></tr>
 <tr><td>markdown</td><td>✓</td><td></td><td></td><td><code>marksman</code>, <code>markdown-oxide</code></td></tr>
@@ -1750,14 +1748,14 @@ Languages</a> guide for more language configuration information.</p>
 <tr><td>php</td><td>✓</td><td>✓</td><td>✓</td><td><code>intelephense</code></td></tr>
 <tr><td>php-only</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>pkgbuild</td><td>✓</td><td>✓</td><td>✓</td><td><code>termux-language-server</code>, <code>bash-language-server</code></td></tr>
-<tr><td>pkl</td><td>✓</td><td></td><td>✓</td><td></td></tr>
+<tr><td>pkl</td><td>✓</td><td></td><td>✓</td><td><code>pkl-lsp</code></td></tr>
 <tr><td>po</td><td>✓</td><td>✓</td><td></td><td></td></tr>
 <tr><td>pod</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>ponylang</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
 <tr><td>powershell</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>prisma</td><td>✓</td><td>✓</td><td></td><td><code>prisma-language-server</code></td></tr>
 <tr><td>prolog</td><td></td><td></td><td></td><td><code>swipl</code></td></tr>
-<tr><td>protobuf</td><td>✓</td><td>✓</td><td>✓</td><td><code>bufls</code>, <code>pb</code></td></tr>
+<tr><td>protobuf</td><td>✓</td><td>✓</td><td>✓</td><td><code>buf</code>, <code>pb</code>, <code>protols</code></td></tr>
 <tr><td>prql</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>purescript</td><td>✓</td><td>✓</td><td></td><td><code>purescript-language-server</code></td></tr>
 <tr><td>python</td><td>✓</td><td>✓</td><td>✓</td><td><code>ruff</code>, <code>jedi-language-server</code>, <code>pylsp</code></td></tr>
@@ -1788,7 +1786,7 @@ Languages</a> guide for more language configuration information.</p>
 <tr><td>spicedb</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>sql</td><td>✓</td><td>✓</td><td></td><td></td></tr>
 <tr><td>sshclientconfig</td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td>starlark</td><td>✓</td><td>✓</td><td></td><td></td></tr>
+<tr><td>starlark</td><td>✓</td><td>✓</td><td></td><td><code>starpls</code></td></tr>
 <tr><td>strace</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>supercollider</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>svelte</td><td>✓</td><td></td><td>✓</td><td><code>svelteserver</code></td></tr>
