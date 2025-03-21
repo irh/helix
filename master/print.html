@@ -167,8 +167,8 @@ for defining custom keybindings, setting themes, etc.
 For everything else (e.g., how to install supported language servers), see the <a href="https://github.com/helix-editor/helix/wiki">Helix Wiki</a>.</p>
 <p>Refer the <a href="https://github.com/helix-editor/helix/wiki/FAQ">FAQ</a> for common questions.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="installing-helix"><a class="header" href="#installing-helix">Installing Helix</a></h1>
-<p>To install Helix, follow the instructions specific to your operating system.
-Note that:</p>
+<p>The typical way to install Helix is via <a href="./package-managers.html">your operating system's package manager</a>.</p>
+<p>Note that:</p>
 <ul>
 <li>
 <p>To get the latest nightly version of Helix, you need to
@@ -1782,11 +1782,12 @@ Languages</a> guide for more language configuration information.</p>
 <tr><td>sml</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>snakemake</td><td>✓</td><td></td><td>✓</td><td><code>pylsp</code></td></tr>
 <tr><td>solidity</td><td>✓</td><td>✓</td><td></td><td><code>solc</code></td></tr>
+<tr><td>sourcepawn</td><td>✓</td><td>✓</td><td></td><td><code>sourcepawn-studio</code></td></tr>
 <tr><td>spade</td><td>✓</td><td></td><td>✓</td><td><code>spade-language-server</code></td></tr>
 <tr><td>spicedb</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>sql</td><td>✓</td><td>✓</td><td></td><td></td></tr>
 <tr><td>sshclientconfig</td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td>starlark</td><td>✓</td><td>✓</td><td></td><td><code>starpls</code></td></tr>
+<tr><td>starlark</td><td>✓</td><td>✓</td><td>✓</td><td><code>starpls</code></td></tr>
 <tr><td>strace</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>supercollider</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>svelte</td><td>✓</td><td></td><td>✓</td><td><code>svelteserver</code></td></tr>
@@ -1803,6 +1804,7 @@ Languages</a> guide for more language configuration information.</p>
 <tr><td>textproto</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
 <tr><td>tfvars</td><td>✓</td><td></td><td>✓</td><td><code>terraform-ls</code></td></tr>
 <tr><td>thrift</td><td>✓</td><td></td><td></td><td></td></tr>
+<tr><td>tlaplus</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>todotxt</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>toml</td><td>✓</td><td>✓</td><td></td><td><code>taplo</code></td></tr>
 <tr><td>tsq</td><td>✓</td><td></td><td></td><td><code>ts_query_ls</code></td></tr>
@@ -1824,7 +1826,8 @@ Languages</a> guide for more language configuration information.</p>
 <tr><td>wast</td><td>✓</td><td></td><td></td><td></td></tr>
 <tr><td>wat</td><td>✓</td><td></td><td></td><td><code>wat_server</code></td></tr>
 <tr><td>webc</td><td>✓</td><td></td><td></td><td></td></tr>
-<tr><td>wgsl</td><td>✓</td><td></td><td></td><td><code>wgsl_analyzer</code></td></tr>
+<tr><td>werk</td><td>✓</td><td></td><td></td><td></td></tr>
+<tr><td>wgsl</td><td>✓</td><td></td><td></td><td><code>wgsl-analyzer</code></td></tr>
 <tr><td>wit</td><td>✓</td><td></td><td>✓</td><td></td></tr>
 <tr><td>wren</td><td>✓</td><td>✓</td><td>✓</td><td></td></tr>
 <tr><td>xit</td><td>✓</td><td></td><td></td><td></td></tr>
@@ -1933,6 +1936,8 @@ Its settings will be merged with the configuration directory <code>config.toml</
 <tr><td><code>workspace-lsp-roots</code></td><td>Directories relative to the workspace root that are treated as LSP roots. Should only be set in <code>.helix/config.toml</code></td><td><code>[]</code></td></tr>
 <tr><td><code>default-line-ending</code></td><td>The line ending to use for new documents. Can be <code>native</code>, <code>lf</code>, <code>crlf</code>, <code>ff</code>, <code>cr</code> or <code>nel</code>. <code>native</code> uses the platform's native line ending (<code>crlf</code> on Windows, otherwise <code>lf</code>).</td><td><code>native</code></td></tr>
 <tr><td><code>insert-final-newline</code></td><td>Whether to automatically insert a trailing line-ending on write if missing</td><td><code>true</code></td></tr>
+<tr><td><code>trim-final-newlines</code></td><td>Whether to automatically remove line-endings after the final one on write</td><td><code>false</code></td></tr>
+<tr><td><code>trim-trailing-whitespace</code></td><td>Whether to automatically remove whitespace preceding line endings on write</td><td><code>false</code></td></tr>
 <tr><td><code>popup-border</code></td><td>Draw border around <code>popup</code>, <code>menu</code>, <code>all</code>, or <code>none</code></td><td><code>none</code></td></tr>
 <tr><td><code>rounded-corners</code></td><td>Set to <code>true</code> to draw rounded border corners</td><td><code>false</code></td></tr>
 <tr><td><code>indent-heuristic</code></td><td>How the indentation for a newly inserted line is computed: <code>simple</code> just copies the indentation level from the previous line, <code>tree-sitter</code> computes the indentation based on the syntax tree and <code>hybrid</code> combines both approaches. If the chosen heuristic is not available, a different one will be used as a fallback (the fallback order being <code>hybrid</code> -&gt; <code>tree-sitter</code> -&gt; <code>simple</code>).</td><td><code>hybrid</code></td></tr>
