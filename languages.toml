@@ -4130,6 +4130,16 @@ name = "gpr"
 source = { git = "https://github.com/brownts/tree-sitter-gpr", rev = "cea857d3c18d1385d1f5b66cd09ea1e44173945c" }
 
 [[language]]
+name = "pug"
+scope = "source.pug"
+injection-regex = "pug"
+file-types = ["pug"]
+
+[[grammar]]
+name = "pug"
+source = { git = "https://github.com/zealot128/tree-sitter-pug", rev = "13e9195370172c86a8b88184cc358b23b677cc46" }
+
+[[language]]
 name = "vento"
 scope = "text.html.vto"
 file-types = ["vto"]
