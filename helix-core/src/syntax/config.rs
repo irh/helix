@@ -20,7 +20,7 @@ pub struct Configuration {
     pub language_server: HashMap<String, LanguageServerConfiguration>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct LanguageConfiguration {
     #[serde(skip)]
@@ -112,7 +112,7 @@ impl LanguageConfiguration {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum FileType {
     /// The extension of the file, either the `Path::extension` or the full
     /// filename if the file does not have an extension.
@@ -316,7 +316,7 @@ enum LanguageServerFeatureConfiguration {
     Simple(String),
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct LanguageServerFeatures {
     pub name: String,
     pub only: HashSet<LanguageServerFeature>,
@@ -395,7 +395,7 @@ where
     builder.build().map(Some).map_err(serde::de::Error::custom)
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "kebab-case")]
 pub struct LanguageServerConfiguration {
     pub command: String,
@@ -481,7 +481,7 @@ pub struct DebuggerQuirks {
     pub absolute_paths: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "kebab-case")]
 pub struct IndentationConfiguration {
     #[serde(deserialize_with = "deserialize_tab_width")]
@@ -625,6 +625,6 @@ where
     Ok(Option::<AutoPairConfig>::deserialize(deserializer)?.and_then(AutoPairConfig::into))
 }
 
-fn default_timeout() -> u64 {
+pub fn default_timeout() -> u64 {
     20
 }
