@@ -5,6 +5,9 @@
   body: (_) @local.scope)
 
 ; Definitions
+(variable
+  (identifier) @local.definition.variable)
+
 (arg
   (identifier) @local.definition.variable.parameter)
 

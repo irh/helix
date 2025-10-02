@@ -4,6 +4,7 @@
   (index)
   (list)
   (map)
+  (unpacked_map)
   (parenthesized)
   (tuple)
 ] @rainbow.scope
