@@ -1,7 +1,7 @@
 use crate::{
-    commands::{self, OnKeyCallback, OnKeyCallbackKind},
+    commands::{self, engine::ScriptingEngine, OnKeyCallback, OnKeyCallbackKind},
     compositor::{Component, Context, Event, EventResult},
-    events::{OnModeSwitch, PostCommand},
+    events::{OnModeSwitch, PostCommand, TerminalFocusGained, TerminalFocusLost},
     handlers::completion::CompletionItem,
     key,
     keymap::{KeymapResult, Keymaps},
@@ -942,7 +942,11 @@ impl EditorView {
     ) -> Option<KeymapResult> {
         let mut last_mode = mode;
         self.pseudo_pending.extend(self.keymaps.pending());
-        let key_result = self.keymaps.get(mode, event);
+
+        // Check the engine for any buffer specific keybindings first
+        let key_result = ScriptingEngine::handle_keymap_event(self, mode, cxt, event)
+            .unwrap_or_else(|| self.keymaps.get(mode, event));
+
         cxt.editor.autoinfo = self.keymaps.sticky().map(|node| node.infobox());
 
         let mut execute_command = |command: &commands::MappableCommand| {
@@ -1593,10 +1597,12 @@ impl Component for EditorView {
             Event::Mouse(event) => self.handle_mouse_event(event, &mut cx),
             Event::IdleTimeout => self.handle_idle_timeout(&mut cx),
             Event::FocusGained => {
+                helix_event::dispatch(TerminalFocusGained { cx: &mut cx });
                 self.terminal_focused = true;
                 EventResult::Consumed(None)
             }
             Event::FocusLost => {
+                helix_event::dispatch(TerminalFocusLost { cx: &mut cx });
                 if context.editor.config().auto_save.focus_lost {
                     let options = commands::WriteAllOptions {
                         force: false,
@@ -1619,6 +1625,22 @@ impl Component for EditorView {
         let config = cx.editor.config();
 
         let use_bufferline = is_bufferline_visible(cx.editor);
+
+        let mut area = area;
+
+        // TODO: This may need to get looked at!
+        if let Some(top) = cx.editor.editor_clipping.top {
+            area = area.clip_top(top);
+        }
+        if let Some(bottom) = cx.editor.editor_clipping.bottom {
+            area = area.clip_bottom(bottom);
+        }
+        if let Some(left) = cx.editor.editor_clipping.left {
+            area = area.clip_left(left);
+        }
+        if let Some(right) = cx.editor.editor_clipping.right {
+            area = area.clip_right(right);
+        }
 
         // -1 for commandline and -1 for bufferline
         let mut editor_area = area.clip_bottom(1);
